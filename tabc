@@ -1,0 +1,80 @@
+#!/bin/bash
+
+function print_help {
+    echo "Usage:"
+    echo "tabc <command>"
+    echo "Commands:"
+    echo "    add <window-id> <tabbed-id> - Adds window to tabbed (an invalid <tabbed-id> has the same affect as create)"
+    echo "    create <window-id>          - Adds tabbed to the window"
+    echo "    remove <window-id>          - Removes window from tabbed"
+    echo "    remove-child <tabbed-id>    - Removes focused child of tabbed"
+    echo "    list <tabbed-id>            - Lists all children of tabbed"
+    
+}
+
+# Get wid of root window
+function get_root_wid {
+	xwininfo -root | awk '/Window id:/{print $4}'
+}
+
+# Get children of tabbed
+function get_clients {
+	id=$1
+	xwininfo -id $id -children | sed -n '/[0-9]\+ \(child\|children\):/,$s/ \+\(0x[0-9a-z]\+\).*/\1/p'
+}
+
+# Get class of a wid
+function get_class {
+	id=$1
+  if [ -z $id ]; then
+    echo ""
+  else
+	  xprop -id $id | sed -n '/WM_CLASS/s/.*, "\(.*\)"/\1/p'
+  fi
+}
+
+function is_tabbed {
+    [ "$(get_class $1)" == "tabbed" ]
+}
+
+function create_tabbed {
+    tabbedid=$(tabbed -d -c -k)
+    xdotool windowreparent $1 $tabbedid
+}
+
+##################################
+# Main Program
+##################################
+
+cmd=$1; shift
+
+case $cmd in
+    add)
+#       <window-id> <tabbed-id>
+        is_tabbed $2 && xdotool windowreparent $1 $2
+        is_tabbed $2 || create_tabbed $1
+        ;;
+    create)
+        is_tabbed $1 || create_tabbed $1
+        ;;
+    remove)
+#       <window-id>
+        xdotool windowreparent $1 $(get_root_wid)
+        ;;
+    remove-child)
+#       <tabbed-id>
+        is_tabbed $1 || exit 1
+        child=$(get_clients $1 | head -n1)
+        xdotool windowreparent $child $(get_root_wid)
+        ;;
+    list)
+#       <tabbed-id>
+        while [[ $# > 0 ]]; do
+            is_tabbed $1 && get_clients $1
+            shift
+        done
+        ;;
+    *)
+        print_help
+        ;;
+esac
