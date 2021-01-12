@@ -1,4 +1,4 @@
-# bspwm-tabbed
+# tabc
 This script adds tabbed windows to any window manager. It is basically a fork of [this gist](https://gist.github.com/jpentland/468a42c172eb607bb950f5d00606312c) but with improved functionality.
 
 # Usage
