@@ -2,7 +2,7 @@ _tabc() {
 
     COMPREPLY=()
 
-    local commands=("add" "remove" "remove-child" "list")
+    local commands=("add" "create" "remove" "remove-child" "list")
 
     local cur=${COMP_WORDS[COMP_CWORD]}
 
